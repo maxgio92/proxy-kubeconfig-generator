@@ -1,3 +1,5 @@
+# proxy-kubeconfig-genenerator
+
 It generates a Kubeconfig Secret from a Service Account and a Kubernetes API server proxy.
 
 ## Synopsis
