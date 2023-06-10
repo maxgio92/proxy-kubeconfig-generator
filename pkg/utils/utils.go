@@ -69,6 +69,10 @@ func GetServiceAccountSecret(clientSet *kubernetes.Clientset, serviceAccountName
 		return nil, err
 	}
 
+	if saSecret.Type != corev1.SecretTypeServiceAccountToken {
+		return nil, ErrSecretTypeNotServiceAccountToken
+	}
+
 	return saSecret, nil
 }
 
