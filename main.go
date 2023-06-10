@@ -17,9 +17,9 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/pkg/errors"
 	"os"
 
+	"github.com/pkg/errors"
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/maxgio92/proxy-kubeconfig-generator/pkg/generator"
