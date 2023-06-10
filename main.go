@@ -17,6 +17,8 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/pkg/errors"
+	"os"
 
 	"k8s.io/client-go/kubernetes"
 
@@ -43,34 +45,39 @@ func main() {
 
 	if *serviceAccountName == "" {
 		flag.Usage()
-		panic(fmt.Errorf("missing service account name"))
+		fmt.Println(errors.New("missing service account name"))
+		os.Exit(1)
 	}
 
 	if *server == "" {
-		flag.Usage()
-		panic(fmt.Errorf("missing server url"))
+		fmt.Println(errors.New("missing server url"))
+		os.Exit(1)
 	}
 
 	if *serverTLSSecretName == "" {
 		flag.Usage()
-		panic(fmt.Errorf("missing server TLS secret name"))
+		fmt.Println(errors.New("missing server TLS secret name"))
+		os.Exit(1)
 	}
 
 	config, err := utils.BuildClientConfig()
 	if err != nil {
-		panic(err)
+		fmt.Println(errors.Wrap(err, "error building client config"))
+		os.Exit(1)
 	}
 
 	clientset := kubernetes.NewForConfigOrDie(config)
 
 	tenantConfig, err := generator.GenerateProxyKubeconfigFromSA(clientset, *serviceAccountName, *namespace, *server, *serverTLSSecretName, *serverTLSSecretCAKey, *serverTLSSecretNamespace, *kubeconfigSecretKey)
 	if err != nil {
-		panic(err)
+		fmt.Println(errors.Wrap(err, "error generating kubeconfig from service account"))
+		os.Exit(1)
 	}
 
 	err = utils.CreateKubeconfigSecret(clientset, tenantConfig, *namespace, *serviceAccountName+"-kubeconfig", *kubeconfigSecretKey)
 	if err != nil {
-		panic(err)
+		fmt.Println(errors.Wrap(err, "error creating kubeconfig secret"))
+		os.Exit(1)
 	}
 
 	fmt.Println("Proxy kubeconfig Secret created")
