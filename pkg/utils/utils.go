@@ -46,7 +46,7 @@ func BuildClientConfig() (*rest.Config, error) {
 	return config, nil
 }
 
-func GetServiceAccountSecret(clientSet *kubernetes.Clientset, serviceAccountName string, namespace string) (*corev1.Secret, error) {
+func GetServiceAccountTokenSecret(clientSet *kubernetes.Clientset, serviceAccountName string, namespace string) (*corev1.Secret, error) {
 	serviceAccount, err := clientSet.CoreV1().ServiceAccounts(namespace).Get(
 		context.Background(),
 		serviceAccountName,
@@ -60,20 +60,22 @@ func GetServiceAccountSecret(clientSet *kubernetes.Clientset, serviceAccountName
 		return nil, fmt.Errorf("no secret found for the service account %s in namepsace %s", serviceAccount.Name, serviceAccount.Namespace)
 	}
 
-	saSecret, err := clientSet.CoreV1().Secrets(namespace).Get(
-		context.Background(),
-		serviceAccount.Secrets[0].Name,
-		metav1.GetOptions{},
-	)
-	if err != nil {
-		return nil, err
+	for _, secret := range serviceAccount.Secrets {
+		saSecret, err := clientSet.CoreV1().Secrets(namespace).Get(
+			context.Background(),
+			secret.Name,
+			metav1.GetOptions{},
+		)
+		if err != nil {
+			continue
+		}
+
+		if saSecret.Type == corev1.SecretTypeServiceAccountToken {
+			return saSecret, nil
+		}
 	}
 
-	if saSecret.Type != corev1.SecretTypeServiceAccountToken {
-		return nil, ErrSecretTypeNotServiceAccountToken
-	}
-
-	return saSecret, nil
+	return nil, ErrServiceAccountTokenSecretNotFound
 }
 
 func BuildKubeconfigFromToken(token []byte, CACertificate []byte, server string, namespace string) (*clientcmdapi.Config, error) {

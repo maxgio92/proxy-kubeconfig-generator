@@ -34,7 +34,7 @@ const (
 // the specified Secret.
 func GenerateProxyKubeconfigFromSA(clientset *kubernetes.Clientset, serviceAccountName string, namespace string, server string, serverTLSSecretName string, serverTLSSecretCAKey string, serverTLSSecretNamespace string, kubeconfigSecretKey string) (*clientcmdapi.Config, error) {
 	// Get Tenant Service Account token
-	saSecret, err := utils.GetServiceAccountSecret(clientset, serviceAccountName, namespace)
+	saSecret, err := utils.GetServiceAccountTokenSecret(clientset, serviceAccountName, namespace)
 	if err != nil {
 		return nil, err
 	}
