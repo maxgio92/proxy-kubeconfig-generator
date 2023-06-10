@@ -47,31 +47,14 @@ func BuildClientConfig() (*rest.Config, error) {
 }
 
 func GetServiceAccountTokenSecret(clientSet *kubernetes.Clientset, serviceAccountName string, namespace string) (*corev1.Secret, error) {
-	serviceAccount, err := clientSet.CoreV1().ServiceAccounts(namespace).Get(
-		context.Background(),
-		serviceAccountName,
-		metav1.GetOptions{},
-	)
+	secretList, err := clientSet.CoreV1().Secrets(namespace).List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
 
-	if len(serviceAccount.Secrets) < 1 {
-		return nil, fmt.Errorf("no secret found for the service account %s in namepsace %s", serviceAccount.Name, serviceAccount.Namespace)
-	}
-
-	for _, secret := range serviceAccount.Secrets {
-		saSecret, err := clientSet.CoreV1().Secrets(namespace).Get(
-			context.Background(),
-			secret.Name,
-			metav1.GetOptions{},
-		)
-		if err != nil {
-			continue
-		}
-
-		if saSecret.Type == corev1.SecretTypeServiceAccountToken {
-			return saSecret, nil
+	for _, secret := range secretList.Items {
+		if secret.Type == corev1.SecretTypeServiceAccountToken && secret.Annotations[corev1.ServiceAccountNameKey] == serviceAccountName {
+			return &secret, nil
 		}
 	}
 
