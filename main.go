@@ -22,6 +22,8 @@ import (
 	"github.com/pkg/errors"
 	"k8s.io/client-go/kubernetes"
 
+	_ "k8s.io/client-go/plugin/pkg/client/auth"
+
 	"github.com/maxgio92/proxy-kubeconfig-generator/pkg/generator"
 	"github.com/maxgio92/proxy-kubeconfig-generator/pkg/utils"
 )
